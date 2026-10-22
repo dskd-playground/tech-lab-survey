@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Play & Tech Lab survey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FBFBFA; --surface:#FFFFFF; --ink:#1B2230; --muted:#5D6675; --line:#D9DDE3; --hole:#D6DAE0;
+  --red:#D7263D; --blue:#1E5AA8; --red-soft:#FCE8EB; --blue-soft:#E5EDF8;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#15191F; --surface:#1D222A; --ink:#E8EBF0; --muted:#A0A8B5; --line:#353C48; --hole:#2A3039;
+    --red:#FF5A6E; --blue:#78A9F0; --red-soft:#3A1F25; --blue-soft:#1B2940; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15191F; --surface:#1D222A; --ink:#E8EBF0; --muted:#A0A8B5; --line:#353C48; --hole:#2A3039;
+  --red:#FF5A6E; --blue:#78A9F0; --red-soft:#3A1F25; --blue-soft:#1B2940; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; color:var(--ink); background-color:var(--bg);
+  background-image:radial-gradient(var(--hole) 1.3px, transparent 1.7px);
+  background-size:22px 22px;
+  font-family:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size:17px; line-height:1.55;
+}
+.wrap{max-width:680px; margin:0 auto; padding:28px 18px 72px}
+header{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; flex-wrap:wrap}
+.brand{font-family:"Bricolage Grotesque", system-ui, sans-serif; font-weight:600; font-size:16px}
+.progress{display:flex; align-items:center; gap:12px; font-size:14px; color:var(--muted)}
+.leds{display:flex; gap:9px}
+.led{width:14px; height:14px; border-radius:50%; border:2px solid var(--line); background:var(--surface); transition:background .25s, border-color .25s, box-shadow .25s}
+.led.done{background:var(--blue); border-color:var(--blue)}
+.led.on{background:var(--red); border-color:var(--red); box-shadow:0 0 0 4px color-mix(in srgb, var(--red) 28%, transparent), 0 0 12px color-mix(in srgb, var(--red) 55%, transparent)}
+
+.panel{position:relative; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:clamp(24px,5vw,44px); padding-top:clamp(30px,5vw,50px); overflow:hidden}
+.panel::before{content:""; position:absolute; left:0; right:0; top:0; height:9px;
+  background:linear-gradient(var(--red) 0 3px, transparent 3px 6px, var(--blue) 6px 9px)}
+h1,h2{font-family:"Bricolage Grotesque", system-ui, sans-serif; letter-spacing:-0.02em; margin:0}
+h1{font-size:clamp(32px,6.5vw,48px); line-height:1.04; font-weight:700}
+h2{font-size:clamp(26px,5vw,34px); line-height:1.1; font-weight:700}
+h1:focus,h2:focus{outline:none}
+.lede{color:var(--muted); margin:10px 0 0}
+.letter p{margin:0 0 14px; max-width:60ch}
+.letter{margin-top:24px}
+.meta{display:flex; gap:20px; flex-wrap:wrap; color:var(--muted); font-size:15px; margin:22px 0 0; padding-top:18px; border-top:1px solid var(--line)}
+
+.q{margin-top:34px; border:0; padding:0; min-width:0}
+.q > legend, .q-title{font-weight:700; padding:0; margin-bottom:4px; display:block}
+.req{color:var(--red); font-weight:400; font-size:14px; margin-left:6px}
+.help{color:var(--muted); font-size:15px; margin:0 0 10px}
+.q.invalid .q-title, .q.invalid > legend{color:var(--red)}
+
+.opts{display:grid; gap:8px; margin-top:10px}
+.opt{display:flex; align-items:center; gap:12px; padding:11px 14px; border:1px solid var(--line); border-radius:10px; cursor:pointer; background:var(--surface); transition:border-color .15s, background .15s}
+.opt:hover{border-color:var(--muted)}
+.ind{flex:none; width:16px; height:16px; border-radius:50%; border:2px solid var(--muted); transition:background .15s, box-shadow .15s, border-color .15s}
+.opt.box .ind{border-radius:4px}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+.opt:has(input:checked){border-color:var(--red); background:var(--red-soft)}
+.opt:has(input:checked) .ind{background:var(--red); border-color:var(--red); box-shadow:0 0 0 3px color-mix(in srgb, var(--red) 25%, transparent)}
+.opt:has(input:focus-visible), .pill:has(input:focus-visible){outline:3px solid var(--blue); outline-offset:2px}
+.opt:has(input:disabled){opacity:.45; cursor:not-allowed}
+
+.seg{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
+.pill{position:relative; padding:7px 13px; border:1px solid var(--line); border-radius:999px; font-size:15px; cursor:pointer; background:var(--surface); transition:border-color .15s, background .15s}
+.pill:hover{border-color:var(--muted)}
+.pill:has(input:checked){background:var(--red); border-color:var(--red); color:#fff}
+.row{padding:14px 0; border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0; padding-top:6px}
+.row-label{font-size:16px}
+
+input[type=text], textarea{width:100%; margin-top:8px; padding:11px 13px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink); font:inherit}
+textarea{min-height:96px; resize:vertical}
+input[type=text]:focus-visible, textarea:focus-visible, .btn:focus-visible{outline:3px solid var(--blue); outline-offset:2px}
+.hp{position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden}
+
+.nav{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:40px; flex-wrap:wrap}
+.btn{font:inherit; font-weight:700; border-radius:10px; padding:12px 20px; cursor:pointer; border:1px solid var(--ink); background:var(--ink); color:var(--surface); text-decoration:none; display:inline-block}
+.btn.ghost{background:transparent; color:var(--ink); border-color:var(--line)}
+.btn:hover{filter:brightness(1.12)}
+.btn:disabled{opacity:.6; cursor:wait}
+.error{color:var(--red); font-weight:700; margin:18px 0 0}
+
+.note{margin-top:24px; padding:14px 16px; border-radius:10px; background:var(--blue-soft); font-size:15px}
+.note strong{display:block}
+.note .btn{margin-top:12px}
+.summary{margin-top:28px}
+.summary h3{font-family:"Bricolage Grotesque", system-ui, sans-serif; font-size:19px; margin:26px 0 6px}
+.summary dl{margin:0}
+.summary dt{color:var(--muted); font-size:14px; margin-top:12px}
+.summary dd{margin:2px 0 0}
+.summary ul{margin:4px 0 0; padding-left:18px}
+
+@media (max-width:480px){ body{font-size:16px} .nav .btn{flex:1} }
+@media (prefers-reduced-motion:reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">Play & Tech Lab survey</div>
+    <div class="progress" id="progress" aria-live="polite"></div>
+  </header>
+  <main class="panel" id="panel"></main>
+</div>
+
+<script>
+/* ===================== Configuration ===================== */
+// Paste the Apps Script web app URL here (it ends in /exec).
+// Leave empty to run in demo mode: nothing is sent, and a summary is shown at the end.
+const ENDPOINT = 'https://script.google.com/macros/s/AKfycby7CY908Eqk5qHV4wop-SMSB-vJCpDSEF8COb0TIMs4FrIaH0xcuS1zvxnj8BWSXh9Q/exec';
+// Optional: link to a separate form where interview volunteers leave their email.
+const CONTACT_URL = '';
+// Change this if you edit the questions after launch, so you can tell versions apart in the Sheet.
+const SURVEY_VERSION = '1';
+/* ========================================================= */
+
+const LIKERT = ['Strongly disagree','Disagree','Neutral','Agree','Strongly agree'];
+const EXP = ['None','Tried it','Basic','Comfortable','Advanced'];
+const RATE = ['Very poor','Poor','OK','Good','Very good','N/A'];
+const ENCOURAGE = ['Intro workshops','Staffed open hours','Examples of projects from my field','Short tutorials or guides','Kits I can borrow','Working alongside other students'];
+
+const SECTIONS = ['About you','Technology in your work','The lab','Your experience','Closing'];
+
+// Matrix rows are [column key, question text]. The key becomes the column name in the Sheet: <question id>_<key>.
+const STEPS = {
+  about: { led:0, title:'About you', lede:'Both questions are optional. Nothing here asks for your name.', qs:[
+    {id:'programme', type:'single', inline:true, label:'Which programme are you on?', options:['BA','MA','Other']},
+    {id:'specialisation', type:'text', label:'Specialisation', placeholder:'For example: industrial design, fashion, communication'},
+    {id:'year', type:'single', inline:true, label:'Year of study', options:['1st','2nd','3rd','4th','5th']}
+  ]},
+  tech: { led:1, title:'Technology in your design work', lede:'By technology we mean code, electronics, AR/VR, AI tools and similar.', qs:[
+    {id:'freq', type:'single', inline:true, required:true, label:'How often does digital technology play a part in your projects?', options:['Never','Rarely','Sometimes','Often','In most projects']},
+    {id:'exp', type:'matrix', label:'How much experience do you have with each of these?', scale:EXP, rows:[
+      ['programming','Programming'],
+      ['electronics','Electronics and microcontrollers'],
+      ['arvr','AR/VR'],
+      ['ai','AI tools'],
+      ['fabrication','Digital fabrication (laser cutting, 3D printing)']
+    ]},
+    {id:'platforms', type:'multi', label:'Which of these platforms have you used?', help:'Select all that apply.', options:['Arduino','ESP32','micro:bit','Raspberry Pi','Other','None'], exclusive:'None'},
+    {id:'att', type:'matrix', label:'How much do you agree with the following?', help:'There are no right answers here.', scale:LIKERT, rows:[
+      ['know_start','I would know where to start if I wanted to add electronics or code to a project.'],
+      ['know_value','I understand what technology could add to the kind of design I do.'],
+      ['seen_inspiring','I have seen projects using technology that made me want to try it.'],
+      ['find_examples','I know where to find examples relevant to my field.'],
+      ['ethical_avoid','I prefer to keep technology out of my work for ethical or personal reasons.'],
+      ['saturation','There is already too much technology in my everyday life.'],
+      ['not_relevant','Technology is not relevant to the area of design I work in.'],
+      ['want_more','I would like to use technology in my work more than I currently do.']
+    ]},
+    {id:'tech_note', type:'textarea', label:'Anything you want to add about technology in your design work?'}
+  ]},
+  lab: { led:2, title:'The lab', lede:'The Play & Tech Lab is the room for electronics, programming, AR/VR and other digital tools.', qs:[
+    {id:'knew', type:'single', required:true, label:'Before this survey, did you know the school has a tech lab?', options:['Yes','No','Not sure']},
+    {id:'offers', type:'single', label:'How well do you know what the lab offers?', options:['Not at all','Vaguely','Fairly well','Very well']},
+    {id:'usage', type:'single', required:true, label:'How often have you used the lab this academic year?', options:['Never','Once or twice','About monthly','About weekly','More than weekly']}
+  ]},
+  nonuser: { led:3, title:'Not using the lab', lede:'This part helps us understand what keeps people away.', qs:[
+    {id:'reasons', type:'multi', max:3, label:'What are the main reasons you haven\u2019t used it?', help:'Choose up to 3.', options:[
+      'I didn\u2019t know it existed','I don\u2019t know what it offers','I don\u2019t know how to use the equipment','There\u2019s no one to help me',
+      'Opening hours don\u2019t fit my schedule','It feels like it\u2019s for people who already know tech','It isn\u2019t relevant to my projects',
+      'I prefer not to use technology in my work','I work with technology elsewhere','Other']},
+    {id:'consider', type:'multi', label:'What, if anything, would make you consider using it?', help:'Select all that apply.', options:[...ENCOURAGE,'Nothing, it isn\u2019t for me','Other'], exclusive:'Nothing, it isn\u2019t for me'},
+    {id:'nonuser_note', type:'textarea', label:'Anything else we should know?'}
+  ]},
+  user: { led:3, title:'Using the lab', lede:'Tell us what works and what doesn\u2019t.', qs:[
+    {id:'used_for', type:'multi', label:'What have you used it for?', help:'Select all that apply.', options:['Coursework','My own projects','Electronics and soldering','Programming','AR/VR','Borrowing equipment','Getting help','Other']},
+    {id:'rate', type:'matrix', label:'How would you rate the following?', scale:RATE, rows:[
+      ['availability','Availability when I need it'],
+      ['help','Help and guidance'],
+      ['components','Range of components'],
+      ['tools','Tools for cutting and soldering'],
+      ['tidiness','Organisation and tidiness'],
+      ['lighting','Lighting for detailed work'],
+      ['air','Ventilation and air quality'],
+      ['noise','Noise level'],
+      ['workstations','Workstations and seating']
+    ]},
+    {id:'works', type:'textarea', label:'What works well already?'},
+    {id:'improve', type:'textarea', label:'What should be improved first?'},
+    {id:'more', type:'multi', label:'What would make you use it more often?', help:'Select all that apply.', options:[...ENCOURAGE,'Other']}
+  ]},
+  closing: { led:4, title:'Last questions', qs:[
+    {id:'workshops', type:'multi', label:'Which workshops would interest you?', help:'Select all that apply.', options:[
+      'Soldering basics','Intro to Arduino','Sensors and interaction','Creative coding','AI tools for designers','AR/VR',
+      'Critical perspectives on technology in design','Other']},
+    {id:'interview', type:'single', inline:true, label:'Would you be willing to have a 20-minute follow-up conversation?', help:'If yes, you\u2019ll get a link to a separate contact form at the end, so your email is never stored with these answers.', options:['Yes','No']}
+  ]}
+};
+
+let answers = {};
+let history = ['intro'];
+const panel = document.getElementById('panel');
+const progress = document.getElementById('progress');
+const current = () => history[history.length - 1];
+
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function renderQ(q){
+  const req = q.required ? '<span class="req">Required</span>' : '';
+  const help = q.help ? `<p class="help">${esc(q.help)}</p>` : '';
+  if (q.type === 'text' || q.type === 'textarea'){
+    const field = q.type === 'text'
+      ? `<input type="text" id="f_${q.id}" name="${q.id}" placeholder="${esc(q.placeholder||'')}" maxlength="200">`
+      : `<textarea id="f_${q.id}" name="${q.id}" maxlength="2000"></textarea>`;
+    return `<div class="q" data-q="${q.id}"><label class="q-title" for="f_${q.id}">${esc(q.label)}${req}</label>${help}${field}</div>`;
+  }
+  if (q.type === 'matrix'){
+    const rows = q.rows.map(([key, text]) => {
+      const name = `${q.id}_${key}`;
+      const pills = q.scale.map(s => `<label class="pill"><input class="sr" type="radio" name="${name}" value="${esc(s)}">${esc(s)}</label>`).join('');
+      return `<div class="row" role="radiogroup" aria-label="${esc(text)}"><div class="row-label">${esc(text)}</div><div class="seg">${pills}</div></div>`;
+    }).join('');
+    return `<fieldset class="q" data-q="${q.id}"><legend>${esc(q.label)}${req}</legend>${help}${rows}</fieldset>`;
+  }
+  const type = q.type === 'multi' ? 'checkbox' : 'radio';
+  let opts;
+  if (q.inline){
+    opts = `<div class="seg">${q.options.map(o => `<label class="pill"><input class="sr" type="${type}" name="${q.id}" value="${esc(o)}">${esc(o)}</label>`).join('')}</div>`;
+  } else {
+    opts = `<div class="opts">${q.options.map(o => `<label class="opt ${type==='checkbox'?'box':''}"><input class="sr" type="${type}" name="${q.id}" value="${esc(o)}"><span class="ind" aria-hidden="true"></span><span>${esc(o)}</span></label>`).join('')}</div>`;
+  }
+  return `<fieldset class="q" data-q="${q.id}"><legend>${esc(q.label)}${req}</legend>${help}${opts}</fieldset>`;
+}
+
+function renderProgress(){
+  const step = STEPS[current()];
+  if (!step){ progress.innerHTML = ''; return; }
+  const leds = SECTIONS.map((_,i) => `<span class="led ${i < step.led ? 'done' : i === step.led ? 'on' : ''}"></span>`).join('');
+  progress.innerHTML = `<span>Section ${step.led + 1} of ${SECTIONS.length}</span><span class="leds" aria-hidden="true">${leds}</span>`;
+}
+
+function render(){
+  const id = current();
+  renderProgress();
+  if (id === 'intro') return renderIntro();
+  if (id === 'done') return renderDone();
+  const step = STEPS[id];
+  const honeypot = id === 'closing'
+    ? '<div class="hp" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>' : '';
+  panel.innerHTML = `
+    <h2 tabindex="-1">${esc(step.title)}</h2>
+    ${step.lede ? `<p class="lede">${esc(step.lede)}</p>` : ''}
+    ${step.qs.map(renderQ).join('')}
+    ${honeypot}
+    <p class="error" id="err" role="alert" hidden></p>
+    <div class="nav">
+      <button class="btn ghost" type="button" data-act="back">Back</button>
+      <button class="btn" type="button" data-act="next">${id === 'closing' ? 'Send answers' : 'Next'}</button>
+    </div>`;
+  restore(step);
+  focusTop();
+}
+
+function renderIntro(){
+  const demo = ENDPOINT ? '' : '<div class="note"><strong>Demo mode</strong>No endpoint is set, so answers will not be sent anywhere.</div>';
+  panel.innerHTML = `
+    <h1 tabindex="-1">Help shape the Play & Tech Lab</h1>
+    <div class="letter">
+      <p>Dear students,</p>
+      <p>This is Francesco from the Play & Tech Lab. I have recently taken over as lab manager, and my job is to make the lab a space that is actually useful to you.</p>
+      <p>To do that, I need to understand how the lab is used today and, just as importantly, why many of you don\u2019t use it. Whether you are in the lab every week, have never been there, or have no interest in technology in your work, your answers matter equally.</p>
+      <p>There are no right answers, and \u201cthis isn\u2019t for me\u201d is a perfectly valid one.</p>
+      <p>Thank you,<br>Francesco</p>
+    </div>
+    <div class="meta"><span>About 5 minutes</span><span>Anonymous</span><span>5 short sections</span></div>
+    ${demo}
+    <div class="nav"><span></span><button class="btn" type="button" data-act="next">Start the survey</button></div>`;
+  focusTop();
+}
+
+function answerText(q){
+  if (q.type === 'matrix'){
+    const items = q.rows.map(([key, text]) => answers[`${q.id}_${key}`] ? `<li>${esc(text)}: ${esc(answers[`${q.id}_${key}`])}</li>` : '').join('');
+    return items ? `<ul>${items}</ul>` : '';
+  }
+  const v = answers[q.id];
+  if (Array.isArray(v)) return v.length ? esc(v.join(', ')) : '';
+  return v ? esc(v) : '';
+}
+
+function renderDone(){
+  const contact = answers.interview === 'Yes'
+    ? (CONTACT_URL
+        ? `<div class="note"><strong>Follow-up conversation</strong>Leave your email in this separate form. It is not connected to your answers.<br><a class="btn" href="${esc(CONTACT_URL)}" target="_blank" rel="noopener">Open the contact form</a></div>`
+        : `<div class="note"><strong>Follow-up conversation</strong>Thanks for offering. Contact Francesco directly at the lab to arrange a time.</div>`)
+    : '';
+  let summary = '';
+  if (!ENDPOINT){
+    const visited = history.filter(h => STEPS[h]);
+    const blocks = visited.map(id => {
+      const step = STEPS[id];
+      const rows = step.qs.map(q => { const a = answerText(q); return a ? `<dt>${esc(q.label)}</dt><dd>${a}</dd>` : ''; }).join('');
+      return rows ? `<h3>${esc(step.title)}</h3><dl>${rows}</dl>` : '';
+    }).join('');
+    summary = `<div class="note"><strong>Demo mode</strong>Nothing was sent. Below is what would be submitted.</div>
+      <div class="summary">${blocks || '<p class="help">No answers given.</p>'}</div>
+      <div class="nav"><span></span><button class="btn ghost" type="button" data-act="restart">Start over</button></div>`;
+  }
+  panel.innerHTML = `
+    <h2 tabindex="-1">Thank you</h2>
+    <p class="lede">Your answers have been sent. They help decide what changes in the lab first.</p>
+    ${contact}
+    ${summary}`;
+  if (!ENDPOINT) panel.querySelector('.lede').textContent = 'Your answers help decide what changes in the lab first.';
+  focusTop();
+}
+
+function restore(step){
+  panel.querySelectorAll('input, textarea').forEach(el => {
+    const v = answers[el.name];
+    if (el.type === 'radio') el.checked = v === el.value;
+    else if (el.type === 'checkbox') el.checked = Array.isArray(v) && v.includes(el.value);
+    else el.value = v || '';
+  });
+  step.qs.filter(q => q.max).forEach(applyMax);
+}
+
+function applyMax(q){
+  const boxes = [...panel.querySelectorAll(`input[name="${q.id}"]`)];
+  const n = boxes.filter(b => b.checked).length;
+  boxes.forEach(b => { b.disabled = !b.checked && n >= q.max; });
+}
+
+function findQ(name){
+  const step = STEPS[current()];
+  return step && step.qs.find(q => q.id === name);
+}
+
+panel.addEventListener('change', e => {
+  const el = e.target;
+  if (el.type === 'radio'){ answers[el.name] = el.value; clearError(el.name); return; }
+  if (el.type === 'checkbox'){
+    const q = findQ(el.name);
+    const boxes = [...panel.querySelectorAll(`input[name="${el.name}"]`)];
+    if (q && q.exclusive && el.checked){
+      boxes.forEach(b => {
+        if (el.value === q.exclusive ? b !== el : b.value === q.exclusive) b.checked = false;
+      });
+    }
+    answers[el.name] = boxes.filter(b => b.checked).map(b => b.value);
+    if (q && q.max) applyMax(q);
+  }
+});
+panel.addEventListener('input', e => {
+  if (e.target.type === 'text' || e.target.tagName === 'TEXTAREA') answers[e.target.name] = e.target.value;
+});
+
+function clearError(name){
+  const fs = panel.querySelector(`[data-q="${name}"]`);
+  if (fs) fs.classList.remove('invalid');
+  if (!panel.querySelector('.invalid')){ const err = document.getElementById('err'); if (err) err.hidden = true; }
+}
+
+function validate(){
+  const step = STEPS[current()];
+  if (!step) return true;
+  const missing = step.qs.filter(q => q.required && !answers[q.id]);
+  panel.querySelectorAll('.q').forEach(f => f.classList.toggle('invalid', missing.some(q => q.id === f.dataset.q)));
+  if (missing.length){
+    const err = document.getElementById('err');
+    err.textContent = `Answer \u201c${missing[0].label}\u201d to continue.`;
+    err.hidden = false;
+    panel.querySelector(`[data-q="${missing[0].id}"]`).scrollIntoView({block:'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+    return false;
+  }
+  return true;
+}
+
+function nextId(id){
+  if (id === 'intro') return 'about';
+  if (id === 'about') return 'tech';
+  if (id === 'tech') return 'lab';
+  if (id === 'lab') return answers.usage === 'Never' ? 'nonuser' : 'user';
+  if (id === 'nonuser' || id === 'user') return 'closing';
+  return 'done';
+}
+
+// One flat row. Every column is always sent, in a fixed order, so the Sheet's header row stays stable.
+// Answers from the branch the respondent did not take are sent empty.
+function buildPayload(){
+  const visited = new Set(history);
+  const p = {
+    version: SURVEY_VERSION,
+    path: visited.has('nonuser') ? 'non-user' : 'user',
+    website: answers.website || ''
+  };
+  for (const [id, step] of Object.entries(STEPS)){
+    const on = visited.has(id);
+    for (const q of step.qs){
+      if (q.type === 'matrix'){
+        q.rows.forEach(([key]) => { p[`${q.id}_${key}`] = on ? (answers[`${q.id}_${key}`] || '') : ''; });
+      } else {
+        const v = answers[q.id];
+        p[q.id] = on ? (Array.isArray(v) ? v.join('; ') : (v || '')) : '';
+      }
+    }
+  }
+  return p;
+}
+
+async function submit(btn){
+  if (!ENDPOINT){ history.push('done'); render(); return; }
+  const err = document.getElementById('err');
+  btn.disabled = true;
+  btn.textContent = 'Sending\u2026';
+  err.hidden = true;
+  try {
+    // No Content-Type header: the body is sent as text/plain, which avoids a CORS preflight that Apps Script cannot answer.
+    const res = await fetch(ENDPOINT, { method:'POST', body: JSON.stringify(buildPayload()) });
+    const text = (await res.text()).trim();
+    if (!res.ok || text !== 'ok') throw new Error(text || res.status);
+    history.push('done');
+    render();
+  } catch (e){
+    btn.disabled = false;
+    btn.textContent = 'Send answers';
+    err.textContent = 'Your answers could not be sent. Check your connection and select Send answers again.';
+    err.hidden = false;
+  }
+}
+
+panel.addEventListener('click', e => {
+  const target = e.target.closest('[data-act]');
+  if (!target) return;
+  const act = target.dataset.act;
+  if (act === 'next'){
+    if (!validate()) return;
+    if (current() === 'closing') return submit(target);
+    history.push(nextId(current()));
+    render();
+  }
+  if (act === 'back' && history.length > 1){ history.pop(); render(); }
+  if (act === 'restart'){ answers = {}; history = ['intro']; render(); }
+});
+
+function focusTop(){
+  window.scrollTo(0,0);
+  const h = panel.querySelector('h1, h2');
+  if (h) h.focus({preventScroll:true});
+}
+
+render();
+</script>
+</body>
+</html>
