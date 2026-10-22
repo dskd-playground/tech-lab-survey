@@ -151,6 +151,18 @@ input[type=text]:focus-visible, textarea:focus-visible, .btn:focus-visible{outli
 .summary ul{margin:4px 0 0; padding-left:18px}
 
 @media (max-width:480px){ body{font-size:16px} .nav .btn{flex:1; padding-inline:20px} }
+
+/* Agree/disagree scale on phones: five equal segments in one row, with the wording under the ends and the middle. */
+.ends{display:none}
+@media (max-width:520px){
+  .seg.scale{display:grid; grid-template-columns:repeat(5, 1fr); gap:4px}
+  .seg.scale .pill{height:42px; padding:0; border-radius:6px}
+  .seg.scale .pt{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+  .ends{display:grid; grid-template-columns:repeat(5, 1fr); margin-top:5px; font-size:12px; line-height:1.25; color:var(--muted)}
+  .ends span:nth-child(1){grid-column:1 / span 2; text-align:left}
+  .ends span:nth-child(2){grid-column:3; text-align:center}
+  .ends span:nth-child(3){grid-column:4 / span 2; text-align:right}
+}
 @media (prefers-reduced-motion:reduce){ *{transition:none !important} }
 </style>
 </head>
@@ -182,7 +194,7 @@ const SURVEY_VERSION = '1';
 
 const LIKERT = ['Strongly disagree','Disagree','Neutral','Agree','Strongly agree'];
 const EXP = ['None','Tried it','Basic','Comfortable','Advanced'];
-const RATE = ['Very poor','Poor','OK','Good','Very good','Haven’t used'];
+const RATE = ['Very poor','Poor','OK','Good','Very good','Can’t say'];
 const ENCOURAGE = ['Intro workshops','Staffed open hours','Examples of projects from my field','Short tutorials or guides','Kits I can borrow','Working alongside other students'];
 
 const DISCIPLINES = ['Accessory Design','Fashion Design','Communication Design','Industrial Design','Textile Design'];
@@ -212,7 +224,7 @@ const STEPS = {
       ['fabrication','Digital fabrication (laser cutting, 3D printing)']
     ]},
     {id:'platforms', type:'multi', label:'Which of these platforms have you used?', help:'Select all that apply.', options:['Arduino','ESP32','micro:bit','Raspberry Pi','Other','None'], exclusive:'None'},
-    {id:'att', type:'matrix', label:'How much do you agree with the following?', help:'There are no right answers here.', scale:LIKERT, rows:[
+    {id:'att', type:'matrix', compact:true, label:'How much do you agree with the following?', help:'There are no right answers here.', scale:LIKERT, rows:[
       ['know_start','I would know where to start if I wanted to add electronics or code to a project.'],
       ['know_value','I understand what technology could add to the kind of design I do.'],
       ['find_examples','I know where to find examples relevant to my field.'],
@@ -267,7 +279,23 @@ const STEPS = {
 };
 
 let answers = {};
-let history = ['intro'];
+let history = ['intro'];   // the survey's own step stack; the browser's is window.history
+let shownAt = 0;
+
+// Progress is kept in this browser tab (sessionStorage) so a reload or a closed-and-restored tab doesn't lose answers.
+// It never leaves the device, and is cleared once the answers are sent or the tab is closed.
+const STORE_KEY = 'ptl-survey-progress';
+function save(){ try { sessionStorage.setItem(STORE_KEY, JSON.stringify({answers, history})); } catch (e) {} }
+function clearSaved(){ try { sessionStorage.removeItem(STORE_KEY); } catch (e) {} }
+function load(){
+  try {
+    const s = JSON.parse(sessionStorage.getItem(STORE_KEY));
+    if (s && Array.isArray(s.history) && s.history[0] === 'intro' && s.history.slice(1).every(h => STEPS[h])){
+      answers = s.answers || {};
+      history = s.history;
+    }
+  } catch (e) {}
+}
 const panel = document.getElementById('panel');
 const progress = document.getElementById('progress');
 const current = () => history[history.length - 1];
@@ -297,8 +325,11 @@ function renderQ(q){
   if (q.type === 'matrix'){
     const rows = q.rows.map(([key, text]) => {
       const name = `${q.id}_${key}`;
-      const pills = q.scale.map(s => `<label class="pill"><input class="sr" type="radio" name="${name}" value="${esc(s)}">${esc(s)}</label>`).join('');
-      return `<div class="row" role="radiogroup" aria-label="${esc(text)}"><div class="row-label">${esc(text)}</div><div class="seg">${pills}</div></div>`;
+      const pills = q.scale.map(s => `<label class="pill"><input class="sr" type="radio" name="${name}" value="${esc(s)}"><span class="pt">${esc(s)}</span></label>`).join('');
+      // Compact scales become one row of equal segments on phones, labelled at both ends and the middle.
+      const ends = q.compact
+        ? `<div class="ends" aria-hidden="true"><span>${esc(q.scale[0])}</span><span>${esc(q.scale[Math.floor(q.scale.length / 2)])}</span><span>${esc(q.scale[q.scale.length - 1])}</span></div>` : '';
+      return `<div class="row" role="radiogroup" aria-label="${esc(text)}"><div class="row-label">${esc(text)}</div><div class="seg${q.compact ? ' scale' : ''}">${pills}</div>${ends}</div>`;
     }).join('');
     return `<fieldset class="q" data-q="${q.id}"><legend>${esc(label)}${req}</legend>${help}${rows}</fieldset>`;
   }
@@ -321,6 +352,8 @@ function renderProgress(){
 
 function render(){
   const id = current();
+  shownAt = performance.now();
+  if (id === 'done') clearSaved(); else save();
   renderProgress();
   if (id === 'intro') return renderIntro();
   if (id === 'done') return renderDone();
@@ -469,7 +502,7 @@ function findQ(name){
 
 panel.addEventListener('change', e => {
   const el = e.target;
-  if (el.type === 'radio'){ answers[el.name] = el.value; clearError(el.name); refresh(); return; }
+  if (el.type === 'radio'){ answers[el.name] = el.value; clearError(el.name); refresh(); save(); return; }
   if (el.type === 'checkbox'){
     const q = findQ(el.name);
     const boxes = [...panel.querySelectorAll(`input[name="${el.name}"]`)];
@@ -481,10 +514,11 @@ panel.addEventListener('change', e => {
     answers[el.name] = boxes.filter(b => b.checked).map(b => b.value);
     if (q && q.max) applyMax(q);
     refresh();
+    save();
   }
 });
 panel.addEventListener('input', e => {
-  if (e.target.type === 'text' || e.target.tagName === 'TEXTAREA') answers[e.target.name] = e.target.value;
+  if (e.target.type === 'text' || e.target.tagName === 'TEXTAREA'){ answers[e.target.name] = e.target.value; save(); }
 });
 
 function clearError(name){
@@ -563,18 +597,38 @@ async function submit(btn){
   }
 }
 
+// Every step gets a browser history entry holding the step count, so the phone's back button
+// goes to the previous step instead of leaving the survey (which would lose all answers).
+function go(id){
+  history.push(id);
+  window.history.pushState({n: history.length}, '');
+  render();
+}
+window.addEventListener('popstate', e => {
+  if (current() === 'done'){ window.history.pushState({n: history.length}, ''); return; }  // already sent: don't reopen the form
+  const n = (e.state && e.state.n) || 1;
+  if (n < history.length){ history.length = n; render(); }
+  else window.history.replaceState({n: history.length}, '');  // browser Forward can't redo a step; stay put
+});
+
+// A second tap that lands on the next page's button within this time is ignored, so a double tap can't skip a page.
+let NEXT_GUARD_MS = 400;
+
 panel.addEventListener('click', e => {
   const target = e.target.closest('[data-act]');
   if (!target) return;
   const act = target.dataset.act;
   if (act === 'next'){
+    if (performance.now() - shownAt < NEXT_GUARD_MS) return;
     if (!validate()) return;
     if (current() === 'closing') return submit(target);
-    history.push(nextId(current()));
-    render();
+    go(nextId(current()));
   }
-  if (act === 'back' && history.length > 1){ history.pop(); render(); }
-  if (act === 'restart'){ answers = {}; history = ['intro']; render(); }
+  if (act === 'back' && history.length > 1){
+    if (window.history.state && window.history.state.n === history.length) window.history.back();  // popstate does the rest
+    else { history.pop(); window.history.replaceState({n: history.length}, ''); render(); }
+  }
+  if (act === 'restart'){ answers = {}; history = ['intro']; window.history.replaceState({n: 1}, ''); render(); }
 });
 
 function focusTop(){
@@ -583,6 +637,8 @@ function focusTop(){
   if (h) h.focus({preventScroll:true});
 }
 
+load();
+window.history.replaceState({n: history.length}, '');
 render();
 </script>
 </body>
