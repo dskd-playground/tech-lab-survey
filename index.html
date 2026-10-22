@@ -87,6 +87,10 @@ h1:focus,h2:focus{outline:none}
 .sig img{width:32px; height:32px; border-radius:50%; object-fit:cover; flex:none}
 .meta{display:flex; gap:20px; flex-wrap:wrap; color:var(--muted); font-size:15px; margin:22px 0 0; padding-top:18px; border-top:1px solid var(--line)}
 
+/* Cover photo on the first page, bleeding to the panel edges. */
+.hero{margin:calc(-1 * (var(--pad) + 6px)) calc(-1 * var(--pad)) 28px}
+.hero img{display:block; width:100%; height:auto; aspect-ratio:16/8; object-fit:cover; object-position:50% 60%}
+
 /* Lab photos: the entrance across the full width, two interior shots below it. */
 .photos{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px}
 .photos figure{margin:0}
@@ -341,6 +345,7 @@ function render(){
 function renderIntro(){
   const demo = ENDPOINT ? '' : '<div class="note"><strong>Demo mode</strong>No endpoint is set, so answers will not be sent anywhere.</div>';
   panel.innerHTML = `
+    <figure class="hero"><img src="assets/img/lab-entrance.jpg" width="1600" height="900" alt="The Play & Tech Lab seen from the corridor, with its door open and display shelves behind the glass wall."></figure>
     <h1 tabindex="-1">Help shape the Play & Tech Lab</h1>
     <div class="letter">
       <p>Dear students,</p>
